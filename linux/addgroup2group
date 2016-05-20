@@ -1,0 +1,15 @@
+#!/bin/bash
+
+_action=$(basename $0)
+_action=${_action:0:1}
+
+_group2add="${1}"
+_add2group="${2}"
+
+[ -z ${_add2group} -o -z ${_group2add} ] && echo 'Error parameter' && exit 1
+
+_list_user=$(grep ${_group2add} /etc/group)
+_list_user=${_list_user##*:}
+if grep -q ^${_add2group} /etc/group; then
+  echo ${_list_user##*:} | tr '\n' '\0' |xargs -d, -L1 -I '{}' gpasswd -${_action} '{}' ${_add2group}
+fi

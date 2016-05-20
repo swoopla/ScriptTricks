@@ -1,0 +1,99 @@
+#/bin/bash
+
+FACT_DIR='/var/lib/puppet/yaml/facts'
+environnement='production'
+DEBUG=''
+MERGE=''
+
+_usage() {
+        cat << EOF
+$0 [-h|--help] [-y|--version] [--verbose|-v] [--merge_array] [--merge_hash] [--nom_machine|-H] <nom_machine> [--data|-d] <data> [--environnement|-e] <environnement>
+ 
+Option:
+   -h              | --help:                       Help
+   -y              | --version:                    La version du programme
+   -v              | --verbose:                    Mode bavard
+   -H              | --nom_machine:                Definition du nom de la machine
+   -d              | --data:                       Definition de la DATA a chercher
+   -e              | --environnement:              Definition de l'environnement (defaut: production)
+   --merge_array:                                  Retour seulement les data ARRAY specifiques (Default: retourne uniquement la valeur la plus specifique)
+   --merge_hash:                                   Retour seulement les data HASH specifiques (Default: retourne uniquement la valeur la plus specifique)
+EOF
+}
+
+[ $# -eq 0 ] && _usage && exit 3
+
+## Recuperation des options
+while [ $# -ne 0 ]; do
+  option="$(printf -- "$1")"
+  case $option in
+    -h | --help)
+      _usage
+      exit 3
+    ;;
+    -y | --version)
+      _version
+      exit 3
+    ;;
+    -v|--verbose|-vv|--debug)
+      DEBUG='-d'
+    ;;
+    -r | --resovldns)
+      resolvdns=true
+    ;;              
+    -H | --nom_machine)
+      nom_machine="$(echo "$2" | tr '[[:upper:]]' '[[:lower:]]')"
+      shift
+    ;;
+    -d | --data)
+      data="$(echo "$2" | tr '[[:upper:]]' '[[:lower:]]')"
+      shift
+    ;;
+    --merge_array)
+      MERGE='--array'
+    ;;
+    --merge_hash)
+      MERGE='--hash'
+    ;;
+    -e | --environnement)
+      environnement="$(echo "$2" | tr '[[:upper:]]' '[[:lower:]]')"
+      shift
+     ;;
+    *)
+      echo
+      echo "Unrecognized option '$option'" 1>&2
+      echo
+      _usage
+      exit 3
+    ;;
+    esac
+    shift
+done
+
+if [ -z "${nom_machine}" ] || [ -z "${environnement}" ]; then
+  echo 'Erreur de Parametre'
+  exit 2
+fi
+
+FQDN_HOST=$(host ${nom_machine} | awk '{print $1}')
+HIERA_FOLDER=$(grep datadir /etc/hiera.yaml | cut -d\" -f2 | sed -e 's#/$##')
+HIERA_FOLDER="${HIERA_FOLDER%/*}/${ENVIRONMENT}"
+
+if [ ! -e "${FACT_DIR}/${FQDN_HOST}.yaml" ]; then
+  echo "Fichier YAML pour la machine ${FQDN_HOST} n'existe pas"
+  exit 2
+fi
+
+if [ -z ${data} ]; then
+  data=$(find /var/lib/puppet/yaml/facts -type f -name "${FACT_DIR}/${FQDN_HOST}.yaml" -exec awk -F":" '/: /  && /    / {print $1 }' {} \; |sort |uniq)
+fi
+
+script_file=$(mktemp)
+for DATA in ${data}; do
+  echo "${DATA}: "
+  echo -n "/usr/bin/hiera ${DEBUG} ${MERGE} ${DATA} ::environment=${ENVIRONMENT} " > ${script_file}
+  awk '/: /  && /    / {sub(/: /, "="); print }' "${FACT_DIR}/${FQDN_HOST}.yaml" | sed -e 's/^[[:space:]]\{1,\}/::/' | grep -v '|-\|_timestamp\|x22' | tr '\n' ' ' >> ${script_file}
+done
+chmod +x ${script_file}
+${script_file}
+rm -f ${script_file}
