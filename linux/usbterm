@@ -1,0 +1,4 @@
+#!/bin/bash
+
+test -w /dev/ttyUSB0 || exit 100
+screen /dev/ttyUSB0
