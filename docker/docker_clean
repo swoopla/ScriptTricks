@@ -1,4 +1,6 @@
 #!/bin/bash
 
-/usr/local/bin/docker_clean_containers_exit && \
-  /usr/local/bin/docker_clean_containers
+/usr/local/bin/docker_clean_containers_exit
+/usr/local/bin/docker_clean_containers
+/usr/local/bin/docker_clean_networks
+/usr/local/bin/docker_clean_volumes
