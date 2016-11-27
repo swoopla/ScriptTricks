@@ -8,6 +8,12 @@ ${WGET} ${URL} -O docker-compose
 chmod +x docker-compose
 echo -e ">>> To Do copy script to docker-* /usr/local/bin/\n"
 
+echo  "* Update docker-compose for ARM only"
+for archi in arm6l arm7l; do
+  URL=$(${WGET} https://github.com/hypriot/compose/releases/ -O- |grep "releases/download/[0-9].[0-9].[0-9]-raspbian/docker-compose-Linux-${archi}" |awk -F'["]' '{print "https://github.com"$2}' |grep download |head -1)
+  ${WGET} ${URL} -O docker-compose-${archi}
+done
+
 echo  "* Update docker-compose bash_completion"
 ${WGET} https://raw.githubusercontent.com/docker/compose/$(./docker-compose version --short)/contrib/completion/bash/docker-compose -O docker-compose.bash
 echo -e ">>> To Do copy *.bash to /etc/bash_completion.d/\n"
