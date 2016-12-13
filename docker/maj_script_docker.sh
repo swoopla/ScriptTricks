@@ -40,10 +40,10 @@ echo -e ">>> To Do: sudo systemctl daemon-reload && sudo systemctl enable docker
 
 echo  "* Update drbdmanage-docker-volume"
 git clone http://git.drbd.org/drbdmanage-docker-volume.git/ && cd drbdmanage-docker-volume && \
-mv drbdmanage-docker-volume ../docker-volume-drbdmanage
-mv systemd/docker-drbdmanage-plugin.service ../docker-volume-drbdmanage.service
-mv systemd/docker-drbdmanage-plugin.socket ../docker-volume-drbdmanage.socket
-cd .. && rm -rf drbdmanage-docker-volume
+  mv drbdmanage-docker-volume ../docker-volume-drbdmanage & \
+  mv systemd/docker-drbdmanage-plugin.service ../docker-volume-drbdmanage.service && \
+  mv systemd/docker-drbdmanage-plugin.socket ../docker-volume-drbdmanage.socket && \
+  cd .. && rm -rf drbdmanage-docker-volume || echo '==> Download failed'
 echo  ">>> To Do move *.service && *.socket in /etc/systemd/system"
 echo  ">>> To Do: sudo systemctl daemon-reload && sudo systemctl enable docker-volume-local-persist && sudo systemctl start docker-volume-local-persist\n"
 
