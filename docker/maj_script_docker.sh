@@ -10,7 +10,7 @@ echo -e ">>> Move file to docker-compose in /usr/local/bin folder\n"
 
 echo  "* Update docker-compose for ARM only"
 for archi in armv6l armv7l; do
-  URL=$(${WGET} https://github.com/hypriot/compose/releases/ -O- |grep "releases/download/+[0-9].+[0-9].+[0-9]-raspbian/docker-compose-Linux-${archi}" |awk -F'["]' '{print "https://github.com"$2}' |grep download |head -1)
+  URL=$(${WGET} https://github.com/hypriot/compose/releases/ -O- |grep "releases/download/[0-9]+.[0-9]+.[0-9]+-raspbian/docker-compose-Linux-${archi}" |awk -F'["]' '{print "https://github.com"$2}' |grep download |head -1)
   ${WGET} ${URL} -O docker-compose-${archi}
 done
 echo -e ">>> Move file docker-compose-armv* to ARM docker server, in /usr/local/bin folder\n"
