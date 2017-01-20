@@ -3,14 +3,14 @@
 WGET='wget -q'
 
 echo  "* Update docker-compose"
-URL=$(${WGET} https://github.com/docker/compose/releases/ -O- |grep "releases/download/[0-9].[0-9].[0-9]/docker-compose-Linux-x86_64" | head -1 |awk -F\" '{ print "https://github.com"$2}')
+URL=$(${WGET} https://github.com/docker/compose/releases/ -O- |egrep "releases/download/[0-9]+.[0-9]+.[0-9]+/docker-compose-Linux-x86_64" | head -1 |awk -F\" '{ print "https://github.com"$2}')
 ${WGET} ${URL} -O docker-compose
 chmod +x docker-compose
 echo -e ">>> Move file to docker-compose in /usr/local/bin folder\n"
 
 echo  "* Update docker-compose for ARM only"
 for archi in armv6l armv7l; do
-  URL=$(${WGET} https://github.com/hypriot/compose/releases/ -O- |grep "releases/download/[0-9].[0-9].[0-9]-raspbian/docker-compose-Linux-${archi}" |awk -F'["]' '{print "https://github.com"$2}' |grep download |head -1)
+  URL=$(${WGET} https://github.com/hypriot/compose/releases/ -O- |grep "releases/download/+[0-9].+[0-9].+[0-9]-raspbian/docker-compose-Linux-${archi}" |awk -F'["]' '{print "https://github.com"$2}' |grep download |head -1)
   ${WGET} ${URL} -O docker-compose-${archi}
 done
 echo -e ">>> Move file docker-compose-armv* to ARM docker server, in /usr/local/bin folder\n"
@@ -20,7 +20,7 @@ ${WGET} https://raw.githubusercontent.com/docker/compose/$(./docker-compose vers
 echo -e ">>> Move docker-compose.bash to /etc/bash_completion.d\n"
 
 echo  "* Update docker-machine"
-URL=$(${WGET} https://github.com/docker/machine/releases/ -O- |grep "releases/download/v[0-9].[0-9].[0-9]/docker-machine-Linux-x86_64" |head -1 |awk -F\" '{ print "https://github.com"$2}')
+URL=$(${WGET} https://github.com/docker/machine/releases/ -O- |egrep "releases/download/v[0-9]+.[0-9]+.[0-9]+/docker-machine-Linux-x86_64" |head -1 |awk -F\" '{ print "https://github.com"$2}')
 ${WGET} ${URL} -O docker-machine
 chmod +x docker-machine
 echo -e ">>> Move file docker-machine in /usr/local/bin folder\n"
@@ -32,7 +32,7 @@ ${WGET} https://github.com/docker/machine/blob/master/contrib/completion/bash/do
 echo -e ">>> Move *.bash in /etc/bash_completion.d folder\n"
 
 echo  "* Update docker-volume-local-persist"
-URL=$(${WGET} https://github.com/CWSpear/local-persist/releases -O- |grep "releases/download/v[0-9].[0-9].[0-9]/local-persist-linux-amd64" | head -1 |awk -F\" '{ print "https://github.com"$2}')
+URL=$(${WGET} https://github.com/CWSpear/local-persist/releases -O- |egrep "releases/download/v[0-9]+.[0-9]+.[0-9]+/local-persist-linux-amd64" | head -1 |awk -F\" '{ print "https://github.com"$2}')
 ${WGET} ${URL} -O docker-volume-local-persist
 echo -e ">>> Move docker-volume-local-persist in /usr/local/bin folder\n"
 ${WGET} https://raw.githubusercontent.com/CWSpear/local-persist/master/init/systemd.service -O- |sed -e 's#/bin/#/local/bin/#' > docker-volume-local-persist.service
@@ -50,13 +50,13 @@ echo -e ">>> To Do: \nsudo systemctl daemon-reload && sudo systemctl enable dock
 #echo -e ">>> To Do: \nsudo systemctl daemon-reload && sudo systemctl enable docker-volume-local-persist && sudo systemctl start docker-volume-local-persist\n"
 
 echo  "* Update docker-volume-vsphere"
-URL=$(${WGET} https://github.com/vmware/docker-volume-vsphere/releases -O- |grep "releases/download/[0-9].[0-9]/docker-volume-vsphere.*deb" |head -1 |awk -F\" '{ print "https://github.com"$2}')
+URL=$(${WGET} https://github.com/vmware/docker-volume-vsphere/releases -O- |egrep "releases/download/[0-9]+.[0-9]+/docker-volume-vsphere.*deb" |head -1 |awk -F\" '{ print "https://github.com"$2}')
 ${WGET} ${URL} -O docker-volume-vsphere.deb
 echo ">>> Move docker-volume-vsphere.deb /usr/local/src"
 echo -e ">>> To Do: \nsudo dpkg -i docker-volume-vsphere.deb\n"
 
 echo  "* Update docker-volume-convoy"
-URL=$(${WGET} https://github.com/rancher/convoy/releases/ -O- |grep "releases/download/v[0-9].[0-9].[0-9]/convoy.tar.gz" |head -1 |awk -F\" '{ print "https://github.com"$2}')
+URL=$(${WGET} https://github.com/rancher/convoy/releases/ -O- |egrep "releases/download/v[0-9]+.[0-9]+.[0-9]+/convoy.tar.gz" |head -1 |awk -F\" '{ print "https://github.com"$2}')
 ${WGET} ${URL} -O convoy.tar.gz && \
   tar xvf convoy.tar.gz && \
   rename s/$/.tmp/ convoy && \
