@@ -26,9 +26,9 @@ chmod +x docker-machine
 echo -e ">>> Move file docker-machine in /usr/local/bin folder\n"
 
 echo  "* Update docker-machine bash_completion"
-${WGET} https://github.com/docker/machine/blob/master/contrib/completion/bash/docker-machine.bash
-${WGET} https://github.com/docker/machine/blob/master/contrib/completion/bash/docker-machine-wrapper.bash
-${WGET} https://github.com/docker/machine/blob/master/contrib/completion/bash/docker-machine-prompt.bash
+${WGET} https://raw.githubusercontent.com/docker/machine/master/contrib/completion/bash/docker-machine.bash
+${WGET} https://raw.githubusercontent.com/docker/machine/master/contrib/completion/bash/docker-machine-wrapper.bash
+${WGET} https://raw.githubusercontent.com/docker/machine/master/contrib/completion/bash/docker-machine-prompt.bash
 echo -e ">>> Move *.bash in /etc/bash_completion.d folder\n"
 
 echo  "* Update docker-volume-local-persist"
