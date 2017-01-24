@@ -1,4 +1,0 @@
-#!/bin/bash
-
-echo ">>> Deleting stopped containers"
-docker ps --all --no-trunc | grep 'Exit' | awk '{print $1}' | xargs -r docker rm
