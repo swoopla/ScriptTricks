@@ -1,4 +1,4 @@
 #!/bin/bash
 
 echo  ">>> Deleting unused volumes"
-docker volume ls |awk '{ print $2}' |grep -v VOLUME |xargs -r -L1 docker volume rm
+docker volume prune -f

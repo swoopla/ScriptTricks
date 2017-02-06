@@ -1,4 +1,4 @@
 #!/bin/bash
 
 echo  ">>> Deleting unused networks"
-docker network ls |grep -v 'NETWORK\|host\|bridge\|none' |awk '{ print $1}' | xargs -r -L1 docker network rm
+docker network prune -f
