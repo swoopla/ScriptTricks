@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo  ">>> Deleting unused networks"
+docker network prune -f
