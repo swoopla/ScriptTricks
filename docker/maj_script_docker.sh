@@ -9,11 +9,7 @@ chmod +x docker-compose
 echo -e ">>> Move file to docker-compose in /usr/local/bin folder\n"
 
 echo  "* Update docker-compose for ARM only"
-for archi in armv6l armv7l; do
-  URL=$(${WGET} https://github.com/hypriot/compose/releases/ -O- |egrep "releases/download/[0-9]+.[0-9]+.[0-9]+-raspbian/docker-compose-Linux-${archi}" |awk -F'["]' '{print "https://github.com"$2}' |grep download |head -1)
-  ${WGET} ${URL} -O docker-compose-${archi}
-done
-echo -e ">>> Move file docker-compose-armv* to ARM docker server, in /usr/local/bin folder\n"
+echo "Read https://github.com/hypriot/arm-compose"
 
 echo  "* Update docker-compose bash_completion"
 ${WGET} https://raw.githubusercontent.com/docker/compose/$(./docker-compose version --short)/contrib/completion/bash/docker-compose -O docker-compose.bash
