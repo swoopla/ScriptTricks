@@ -1,0 +1,16 @@
+[Unit]
+Description=Run docker-compose Pulling working hourly
+Requires=u@%i.service
+
+[Timer]
+# Explicitly declare service that this timer is responsible for
+Unit=p-u@%i.service
+
+# Runs 'p-u@%i.service' relative to when the *timer-unit* has been activated
+OnActiveSec=20min
+
+# Runs 'p-u@%i.service' relative to when *service-unit* was last deactivated
+OnUnitActiveSec=60min
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,33 @@
+#!/bin/bash
+
+function _enable_service () {
+  local _name=$1
+  systemctl enable _name
+  systemctl start _name
+}
+
+function _dc-network.wants(){
+  local _bridge_name=$1
+  systemctl enable docker-network@${_bridge_name}
+  test -d /etc/systemd/system/docker-compose@${dockercompose}.service.wants || \
+    mkdir /etc/systemd/system/docker-compose@${dockercompose}.service.wants
+  ln -s /etc/systemd/system/docker-network@${dc_network_name} /etc/systemd/system/docker-compose@${dockercompose}.wants/
+}
+
+dockercompose=$1
+DOCKER_FOLDER='/opt/data/dockers'
+
+test -d ${DOCKER_FOLDER}/${dockercompose} || exit 1
+test -d /etc/docker-compose && cd /etc/docker-compose || exit 1
+
+ln -sf ${DOCKER_FOLDER}/${dockercompose} . && \
+  cd ${dockercompose}
+
+_enable_service docker-compose@${dockercompose}.service
+_enable_service pull-docker-compose@${dockercompose}.service
+_enable_service pull-docker-compose@${dockercompose}.timer
+_enable_service pull-docker-compose@${dockercompose}.timer
+ 
+for bridge_name in $(grep ^networks -A3 docker-compose.yml |grep name |cut -d: -f2 ); do
+  _dc-network.wants bridge_name
+done

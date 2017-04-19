@@ -1,0 +1,32 @@
+#!/bin/bash
+
+function _disable_service () {
+  local _name=$1
+  systemctl stop _name
+  systemctl disable _name
+  systemctl disable _name
+}
+
+function _dc-network.unwants(){
+  local _bridge_name=$1
+  _disable_service docker-network@${_bridge_name}
+  rm -f /etc/systemd/system/docker-compose@${dockercompose}.wants/docker-network@${_bridge_name}*
+  find /etc/systemd/system/ -type d -name 'docker-compose@${dockercompose}.service.wants' -empty -delete
+}
+
+
+dockercompose=${1##*@}
+
+if ! test -L /etc/docker-compose/${dockercompose%.*}; then
+  echo "Docker-Compose ${dockercompose%.*} n'existe pas et ne peut être desactive"
+  exit 1
+fi
+
+_disable_service pull-docker-compose@${dockercompose%.*}.service
+_disable_service pull-docker-compose@${dockercompose%.*}.timer
+_disable_service docker-compose@${dockercompose%.*}.service
+systemctl daemon-reload
+systemctl reset-failed
+
+cd /etc/docker-compose && \
+ rm ${dockercompose%.*}
