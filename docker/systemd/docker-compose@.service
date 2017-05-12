@@ -12,7 +12,7 @@ Restart=always
 RestartSec=10
 TimeoutStartSec=60
 TimeoutStopSec=15
-Environment="PWD=/etc/docker-compose/%i"
+Environment="COMPOSE_OPTIONS= -e PWD=/etc/docker-compose/%i"
 WorkingDirectory=/etc/docker-compose/%i/
 ExecStartPre=-/usr/local/bin/docker-compose rm -f
 ExecStart=/usr/local/bin/docker-compose up
