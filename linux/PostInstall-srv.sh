@@ -76,11 +76,11 @@ EOF
 
 cat > 20-sysinfo << EOF
 #!/bin/bash
-proc=`cat /proc/cpuinfo | grep -i "^model name" | awk -F": " '{print $2}'`
-memfree=`cat /proc/meminfo | grep MemFree | awk {'print $2'}`
-memtotal=`cat /proc/meminfo | grep MemTotal | awk {'print $2'}`
-uptime=`uptime -p`
-addrip=`hostname -I | cut -d " " -f1`
+proc=$(grep -i "^model name" /proc/cpuinfo | awk -F": " '{print $2}')
+memfree=$(grep MemFree /proc/meminfo | awk {'print $2'})
+memtotal=$(grep MemTotal /proc/meminfo | awk {'print $2'})
+uptime=$(uptime -p)
+addrip=$(hostname -I | cut -d " " -f1)
 # Récupérer le loadavg
 read one five fifteen rest < /proc/loadavg
 
@@ -91,7 +91,7 @@ printf "  Charge CPU : $one (1min) / $five (5min) / $fifteen (15min)"
 printf "\n"
 printf "  Adresse IP : $addrip"
 printf "\n"
-printf "  RAM : $(($memfree/1024))MB libres / $(($memtotal/1024))MB"
+printf "  RAM : $((${memfree:-1024}/1024))MB libres / $((${memtotal:-1024}/1024))MB"
 printf "\n"
 printf "  Uptime : $uptime"
 printf "\n"
@@ -167,9 +167,9 @@ chmod 700 /etc/cron.monthly /etc/cron.d /etc/cron.weekly /etc/cron.hourly /etc/c
 touch /etc/cron.allow /etc/at.allow
 chmod 400 /boot/grub/grub.cfg
 
-#/tmp nodev,nosuid,noexec 
-#/var/tmp nodev,nosuid,noexec
-#/home nodev,nosuid 
-#/run/shm nodev,nosuid,noexec 
+sed -i -e 's#\(/tmp.*defaults\)#\1,nodev,nosuid,noexec#' /etc/fstab
+sed -e 's#\(/home.*defaults\)#\1,nodev,nosuid#' /etc/fstab
 
-usermod -G ssh -a $SUDO_USER
+for _user in $(grep home /etc/passwd |cut -d: -f1); do
+    usermod -G ssh -a $_user
+done
