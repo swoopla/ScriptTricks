@@ -1,14 +1,107 @@
 #!/bin/bash
 
-sudo umount /va/lib/docker
-sudo sed -i -e 's#va/#var/#' /etc/fstab 
-sudo mkdir /var/lib/docker
+umount /va/lib/docker
+sed -i -e 's#va/#var/#' /etc/fstab 
+mkdir /var/lib/docker
+mount /var/lib/docker
 
-sudo apt install libpam-cracklib git fail2ban
+apt install libpam-cracklib git fail2ban figlet
+
+#https://cloriou.fr/2020/04/02/ajouter-motd-dynamique-debian/
+rm /etc/update-motd.d/10-uname
+pushd /etc/update-motd.d
+cat > colors << EOF
+NONE="\033[m"
+WHITE="\033[1;37m"
+GREEN="\033[1;32m"
+RED="\033[0;32;31m"
+YELLOW="\033[1;33m"
+BLUE="\033[34m"
+CYAN="\033[36m"
+LIGHT_GREEN="\033[1;32m"
+LIGHT_RED="\033[1;31m"
+EOF
+
+cat > 00-hostname << EOF
+#!/bin/sh
+
+. /etc/update-motd.d/colors
+
+printf "\n"$LIGHT_RED
+figlet "  "$(hostname -s)
+printf $NONE
+printf "\n"
+EOF
+
+cat > 10-banner << EOF
+#!/bin/bash
+#
+#    Copyright (C) 2009-2010 Canonical Ltd.
+#
+#    Authors: Dustin Kirkland <kirkland@canonical.com>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License along
+#    with this program; if not, write to the Free Software Foundation, Inc.,
+#    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+. /etc/update-motd.d/colors
+
+[ -r /etc/update-motd.d/lsb-release ] && . /etc/update-motd.d/lsb-release
+
+if [ -z "$DISTRIB_DESCRIPTION" ] && [ -x /usr/bin/lsb_release ]; then
+    # Fall back to using the very slow lsb_release utility
+    DISTRIB_DESCRIPTION=$(lsb_release -s -d)
+fi
+
+re='(.*\()(.*)(\).*)'
+if [[ $DISTRIB_DESCRIPTION =~ $re ]]; then
+    DISTRIB_DESCRIPTION=$(printf "%s%s%s%s%s" "${BASH_REMATCH[1]}" "${YELLOW}" "${BASH_REMATCH[2]}" "${NONE}" "${BASH_REMATCH[3]}")
+fi
+
+echo -e "  "$DISTRIB_DESCRIPTION "(kernel "$(uname -r)")\n"
+
+# Update the information for next time
+printf "DISTRIB_DESCRIPTION=\"%s\"" "$(lsb_release -s -d)" > /etc/update-motd.d/lsb-release &
+EOF
+
+cat > 20-sysinfo << EOF
+#!/bin/bash
+proc=`cat /proc/cpuinfo | grep -i "^model name" | awk -F": " '{print $2}'`
+memfree=`cat /proc/meminfo | grep MemFree | awk {'print $2'}`
+memtotal=`cat /proc/meminfo | grep MemTotal | awk {'print $2'}`
+uptime=`uptime -p`
+addrip=`hostname -I | cut -d " " -f1`
+# Récupérer le loadavg
+read one five fifteen rest < /proc/loadavg
+
+# Affichage des variables
+printf "  Processeur : $proc"
+printf "\n"
+printf "  Charge CPU : $one (1min) / $five (5min) / $fifteen (15min)"
+printf "\n"
+printf "  Adresse IP : $addrip"
+printf "\n"
+printf "  RAM : $(($memfree/1024))MB libres / $(($memtotal/1024))MB"
+printf "\n"
+printf "  Uptime : $uptime"
+printf "\n"
+printf "\n"
+EOF
+chmod 755 0*
+popd
 
 chmod 600 /etc/gshadow- /etc/passwd- /etc/group-
 
-/etc/motd
 echo "------------------------------------------------------------
 WARNING: You must have specific authorization to access this
 machine. Unauthorized users will be logged, monitored, and
@@ -64,16 +157,19 @@ IgnoreRhosts                    yes
 MaxAuthTries                    4
 EOF
 chmod 600 /etc/ssh/sshd_config
-echo 'Storage=persistent' >> /etc/systemd/journald.conf
+sshd -t && service ssh restart
+
+echo 'Storage=persistent' >> /etc/systemd/journald.conf && service systemd-journald restart
+
 chmod 0640 /var/log/dpkg.log /var/log/cloud-init.log /var/log/faillog /var/log/lastlog /var/log/btmp /var/log/bootstrap.log 
-sudo chmod 600 /etc/crontab
-sudo chmod 700 /etc/cron.monthly /etc/cron.d /etc/cron.weekly /etc/cron.hourly /etc/cron.daily 
-sudo touch /etc/cron.allow /etc/at.allow
-sudo chmod 400 /boot/grub/grub.cfg
+chmod 600 /etc/crontab
+chmod 700 /etc/cron.monthly /etc/cron.d /etc/cron.weekly /etc/cron.hourly /etc/cron.daily 
+touch /etc/cron.allow /etc/at.allow
+chmod 400 /boot/grub/grub.cfg
 
 #/tmp nodev,nosuid,noexec 
 #/var/tmp nodev,nosuid,noexec
 #/home nodev,nosuid 
 #/run/shm nodev,nosuid,noexec 
 
-sudo usermod -G ssh -a $USER
+usermod -G ssh -a $SUDO_USER
