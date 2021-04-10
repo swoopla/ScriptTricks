@@ -5,7 +5,7 @@ sed -i -e 's#va/#var/#' /etc/fstab
 mkdir /var/lib/docker
 mount /var/lib/docker
 
-apt install libpam-cracklib git fail2ban figlet
+apt install -yqq libpam-cracklib git fail2ban figlet
 
 #https://cloriou.fr/2020/04/02/ajouter-motd-dynamique-debian/
 rm -f /etc/update-motd.d/10-uname
@@ -98,6 +98,7 @@ printf "\n"
 printf "\n"
 EOF
 chmod 755 *
+ln -sf /run/motd.dynamic.new /etc/motd
 popd
 
 chmod 600 /etc/gshadow- /etc/passwd- /etc/group-
