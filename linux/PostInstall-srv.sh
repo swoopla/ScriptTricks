@@ -8,7 +8,7 @@ mount /var/lib/docker
 apt install libpam-cracklib git fail2ban figlet
 
 #https://cloriou.fr/2020/04/02/ajouter-motd-dynamique-debian/
-rm /etc/update-motd.d/10-uname
+rm -f /etc/update-motd.d/10-uname
 pushd /etc/update-motd.d
 cat > colors << EOF
 NONE="\033[m"
@@ -27,9 +27,9 @@ cat > 00-hostname << EOF
 
 . /etc/update-motd.d/colors
 
-printf "\n"$LIGHT_RED
-figlet "  "$(hostname -s)
-printf $NONE
+printf "\n"\$LIGHT_RED
+figlet "  "\$(hostname -s)
+printf \$NONE
 printf "\n"
 EOF
 
@@ -58,46 +58,46 @@ cat > 10-banner << EOF
 
 [ -r /etc/update-motd.d/lsb-release ] && . /etc/update-motd.d/lsb-release
 
-if [ -z "$DISTRIB_DESCRIPTION" ] && [ -x /usr/bin/lsb_release ]; then
+if [ -z "\$DISTRIB_DESCRIPTION" ] && [ -x /usr/bin/lsb_release ]; then
     # Fall back to using the very slow lsb_release utility
-    DISTRIB_DESCRIPTION=$(lsb_release -s -d)
+    DISTRIB_DESCRIPTION=\$(lsb_release -s -d)
 fi
 
 re='(.*\()(.*)(\).*)'
-if [[ $DISTRIB_DESCRIPTION =~ $re ]]; then
-    DISTRIB_DESCRIPTION=$(printf "%s%s%s%s%s" "${BASH_REMATCH[1]}" "${YELLOW}" "${BASH_REMATCH[2]}" "${NONE}" "${BASH_REMATCH[3]}")
+if [[ \$DISTRIB_DESCRIPTION =~ \$re ]]; then
+    DISTRIB_DESCRIPTION=$(printf "%s%s%s%s%s" "\${BASH_REMATCH[1]}" "\${YELLOW}" "\${BASH_REMATCH[2]}" "\${NONE}" "\${BASH_REMATCH[3]}")
 fi
 
-echo -e "  "$DISTRIB_DESCRIPTION "(kernel "$(uname -r)")\n"
+echo -e "  "\$DISTRIB_DESCRIPTION "(kernel "\$(uname -r)")\n"
 
 # Update the information for next time
-printf "DISTRIB_DESCRIPTION=\"%s\"" "$(lsb_release -s -d)" > /etc/update-motd.d/lsb-release &
+printf "DISTRIB_DESCRIPTION=\"%s\"" "\$(lsb_release -s -d)" > /etc/update-motd.d/lsb-release &
 EOF
 
 cat > 20-sysinfo << EOF
 #!/bin/bash
-proc=$(grep -i "^model name" /proc/cpuinfo | awk -F": " '{print $2}')
-memfree=$(grep MemFree /proc/meminfo | awk {'print $2'})
-memtotal=$(grep MemTotal /proc/meminfo | awk {'print $2'})
-uptime=$(uptime -p)
-addrip=$(hostname -I | cut -d " " -f1)
+proc=\$(grep -i "^model name" /proc/cpuinfo | awk -F": " '{print \$2}')
+memfree=\$(grep MemFree /proc/meminfo | awk {'print \$2'})
+memtotal=\$(grep MemTotal /proc/meminfo | awk {'print \$2'})
+uptime=\$(uptime -p)
+addrip=\$(hostname -I | cut -d " " -f1)
 # Récupérer le loadavg
 read one five fifteen rest < /proc/loadavg
 
 # Affichage des variables
-printf "  Processeur : $proc"
+printf "  Processeur : \$proc"
 printf "\n"
-printf "  Charge CPU : $one (1min) / $five (5min) / $fifteen (15min)"
+printf "  Charge CPU : \$one (1min) / \$five (5min) / \$fifteen (15min)"
 printf "\n"
-printf "  Adresse IP : $addrip"
+printf "  Adresse IP : \$addrip"
 printf "\n"
-printf "  RAM : $((${memfree:-1024}/1024))MB libres / $((${memtotal:-1024}/1024))MB"
+printf "  RAM : $((\${memfree:-1024}/1024))MB libres / \$((${memtotal:-1024}/1024))MB"
 printf "\n"
-printf "  Uptime : $uptime"
+printf "  Uptime : \$uptime"
 printf "\n"
 printf "\n"
 EOF
-chmod 755 0*
+chmod 755 *
 popd
 
 chmod 600 /etc/gshadow- /etc/passwd- /etc/group-
@@ -141,7 +141,7 @@ KbdInteractiveAuthentication    no
 KerberosAuthentication          no
 HostbasedAuthentication         no
 GSSAPIAuthentication            no
-SSAPIKeyExchange                no
+GSSAPIKeyExchange               no
 AllowTCPForwarding              no
 ClientAliveInterval             300
 ClientAliveCountMax             0
@@ -168,7 +168,7 @@ touch /etc/cron.allow /etc/at.allow
 chmod 400 /boot/grub/grub.cfg
 
 sed -i -e 's#\(/tmp.*defaults\)#\1,nodev,nosuid,noexec#' /etc/fstab
-sed -e 's#\(/home.*defaults\)#\1,nodev,nosuid#' /etc/fstab
+sed -i -e 's#\(/home.*defaults\)#\1,nodev,nosuid#' /etc/fstab
 
 for _user in $(grep home /etc/passwd |cut -d: -f1); do
     usermod -G ssh -a $_user
