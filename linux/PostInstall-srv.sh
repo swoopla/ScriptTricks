@@ -5,7 +5,7 @@ sed -i -e 's#va/#var/#' /etc/fstab
 mkdir /var/lib/docker
 mount /var/lib/docker
 
-apt install -yqq libpam-cracklib git fail2ban figlet unattended-upgrade
+apt install -yqq libpam-cracklib git fail2ban figlet unattended-upgrades
 
 #https://cloriou.fr/2020/04/02/ajouter-motd-dynamique-debian/
 rm -f /etc/update-motd.d/10-uname
