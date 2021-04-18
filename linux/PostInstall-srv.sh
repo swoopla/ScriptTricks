@@ -5,7 +5,7 @@ sed -i -e 's#va/#var/#' /etc/fstab
 mkdir /var/lib/docker
 mount /var/lib/docker
 
-apt install -yqq libpam-cracklib git fail2ban figlet
+apt install -yqq libpam-cracklib git fail2ban figlet unattended-upgrade
 
 #https://cloriou.fr/2020/04/02/ajouter-motd-dynamique-debian/
 rm -f /etc/update-motd.d/10-uname
@@ -174,3 +174,17 @@ sed -i -e 's#\(/home.*defaults\)#\1,nodev,nosuid#' /etc/fstab
 for _user in $(grep home /etc/passwd |cut -d: -f1); do
     usermod -G ssh -a $_user
 done
+ 
+cat > /etc/apt/apt.conf.d/50unattended-upgrades << EOF
+Unattended-Upgrade::Origins-Pattern {
+        "origin=Debian,codename=${distro_codename}-updates";
+        "origin=Debian,codename=${distro_codename},label=Debian";
+        "origin=Debian,codename=${distro_codename},label=Debian-Security";
+};
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+Unattended-Upgrade::Remove-New-Unused-Dependencies "true";
+Unattended-Upgrade::Remove-Unused-Dependencies "false";
+Unattended-Upgrade::Automatic-Reboot "true";
+Unattended-Upgrade::Automatic-Reboot-WithUsers "false";
+Unattended-Upgrade::Automatic-Reboot-Time "03:00";
+EOF
