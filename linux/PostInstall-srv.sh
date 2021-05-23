@@ -5,6 +5,9 @@ sed -i -e 's#va/#var/#' /etc/fstab
 mkdir /var/lib/docker
 mount /var/lib/docker
 
+sed -e -i 's/main$/main contrib non-free/;/^deb-src/d;s/^deb/deb [arch=amd64]/' /etc/apt/sources.list 
+apt update
+
 apt install -yqq libpam-cracklib git fail2ban figlet unattended-upgrades
 
 #https://cloriou.fr/2020/04/02/ajouter-motd-dynamique-debian/
@@ -174,7 +177,9 @@ sed -i -e 's#\(/home.*defaults\)#\1,nodev,nosuid#' /etc/fstab
 for _user in $(grep home /etc/passwd |cut -d: -f1); do
     usermod -G ssh -a $_user
 done
- 
+
+distro_codename="$(lsb_release -cs)"
+
 cat > /etc/apt/apt.conf.d/50unattended-upgrades << EOF
 Unattended-Upgrade::Origins-Pattern {
         "origin=Debian,codename=${distro_codename}-updates";
