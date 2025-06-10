@@ -1,14 +1,8 @@
 #!/bin/bash
 
-umount /va/lib/docker
-sed -i -e 's#va/#var/#' /etc/fstab 
-mkdir /var/lib/docker
-mount /var/lib/docker
-
-sed -e -i 's/main$/main contrib non-free/;/^deb-src/d;s/^deb/deb [arch=amd64]/' /etc/apt/sources.list 
 apt update
 
-apt install -yqq libpam-cracklib git fail2ban figlet unattended-upgrades
+apt install -yq curl fail2ban figlet unattended-upgrades
 
 #https://cloriou.fr/2020/04/02/ajouter-motd-dynamique-debian/
 rm -f /etc/update-motd.d/10-uname
@@ -94,7 +88,7 @@ printf "  Charge CPU : \$one (1min) / \$five (5min) / \$fifteen (15min)"
 printf "\n"
 printf "  Adresse IP : \$addrip"
 printf "\n"
-printf "  RAM : $((\${memfree:-1024}/1024))MB libres / \$((${memtotal:-1024}/1024))MB"
+printf "  RAM : $((\${memfree:-1024}/1024))MB libres / \$((\${memtotal:-1024}/1024))MB"
 printf "\n"
 printf "  Uptime : \$uptime"
 printf "\n"
@@ -128,7 +122,7 @@ Compression                     no
 IgnoreUserKnownHosts            yes
 Banner                          /etc/issue.net
 AllowUsers                      *
-AllowGroups                     ssh
+AllowGroups                     _ssh
 StrictModes                     yes
 DenyUsers                       nobody
 DenyGroups                      nobody
