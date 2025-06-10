@@ -23,7 +23,7 @@ if ${install_git_repo}; then
 	echo "## Install GIT Repo"
 	test -d GitRepo || mkdir GitRepo
 
-	sudo apt install -yqq git
+	apt install -yqq git
 	pushd GitRepo
 
 	echo "  * Clone Debian-CIS"
@@ -55,6 +55,131 @@ if ${install_git_repo}; then
 	popd
 fi
 
+if [[ $(lsb_release -sc ID) == 'Debian' ]]; then
+	echo "## Install Srv"
+
+	apt install -yqq fail2ban figlet unattended-upgrades
+	cat > sudo nano /etc/fail2ban/jail.d/ssh.conf << EOF
+[sshd]
+enabled = true
+port = ssh
+filter = sshd
+maxretry = 3
+findtime = 5m
+bantime  = 30m
+EOF
+
+	service fail2ban restart
+
+	#https://cloriou.fr/2020/04/02/ajouter-motd-dynamique-debian/
+	rm -f /etc/update-motd.d/10-uname
+	pushd /etc/update-motd.d
+		cat > colors << EOF
+NONE="\033[m"
+WHITE="\033[1;37m"
+GREEN="\033[1;32m"
+RED="\033[0;32;31m"
+YELLOW="\033[1;33m"
+BLUE="\033[34m"
+CYAN="\033[36m"
+LIGHT_GREEN="\033[1;32m"
+LIGHT_RED="\033[1;31m"
+EOF
+
+		cat > 00-hostname << EOF
+#!/bin/sh
+
+. /etc/update-motd.d/colors
+
+printf "\n"\$LIGHT_RED
+figlet "  "\$(hostname -s)
+printf \$NONE
+printf "\n"
+EOF
+
+		cat > 10-banner << EOF
+#!/bin/bash
+#
+#    Copyright (C) 2009-2010 Canonical Ltd.
+#
+#    Authors: Dustin Kirkland <kirkland@canonical.com>
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License along
+#    with this program; if not, write to the Free Software Foundation, Inc.,
+#    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+. /etc/update-motd.d/colors
+
+[ -r /etc/update-motd.d/lsb-release ] && . /etc/update-motd.d/lsb-release
+
+if [ -z "\$DISTRIB_DESCRIPTION" ] && [ -x /usr/bin/lsb_release ]; then
+    # Fall back to using the very slow lsb_release utility
+    DISTRIB_DESCRIPTION=\$(lsb_release -s -d)
+fi
+
+re='(.*\()(.*)(\).*)'
+if [[ \$DISTRIB_DESCRIPTION =~ \$re ]]; then
+    DISTRIB_DESCRIPTION=$(printf "%s%s%s%s%s" "\${BASH_REMATCH[1]}" "\${YELLOW}" "\${BASH_REMATCH[2]}" "\${NONE}" "\${BASH_REMATCH[3]}")
+fi
+
+echo -e "  "\$DISTRIB_DESCRIPTION "(kernel "\$(uname -r)")\n"
+
+# Update the information for next time
+printf "DISTRIB_DESCRIPTION=\"%s\"" "\$(lsb_release -s -d)" > /etc/update-motd.d/lsb-release &
+EOF
+
+		cat > 20-sysinfo << EOF
+#!/bin/bash
+proc=\$(grep -i "^model name" /proc/cpuinfo | awk -F": " '{print \$2}')
+memfree=\$(grep MemFree /proc/meminfo | awk {'print \$2'})
+memtotal=\$(grep MemTotal /proc/meminfo | awk {'print \$2'})
+uptime=\$(uptime -p)
+addrip=\$(hostname -I | cut -d " " -f1)
+# Récupérer le loadavg
+read one five fifteen rest < /proc/loadavg
+
+# Affichage des variables
+printf "  Processeur : \$proc"
+printf "\n"
+printf "  Charge CPU : \$one (1min) / \$five (5min) / \$fifteen (15min)"
+printf "\n"
+printf "  Adresse IP : \$addrip"
+printf "\n"
+printf "  RAM : $((\${memfree:-1024}/1024))MB libres / \$((\${memtotal:-1024}/1024))MB"
+printf "\n"
+printf "  Uptime : \$uptime"
+printf "\n"
+printf "\n"
+EOF
+		chmod 755 *
+		ln -sf /run/motd.dynamic.new /etc/motd
+	popd
+
+	chmod 600 /etc/gshadow- /etc/passwd- /etc/group-
+	cat >> /etc/ssh/sshd_config.d/perso.conf << EOF
+AllowGroups                     _ssh
+DenyUsers                       nobody
+DenyGroups                      nobody
+EOF
+	chmod 600 /etc/ssh/sshd_config
+	sshd -t && service ssh restart
+
+	for _user in $(grep home /etc/passwd |cut -d: -f1); do
+    		usermod -G _ssh -a $_user
+	done
+
+fi
+
 if ${install_brave_browser}; then
 	echo "## Install Brave"
 	curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
@@ -65,6 +190,10 @@ if ${install_brave_browser}; then
 		"
 fi
 
+if [[ $(lsb_release -sc ID) == 'Debian' ]]; then
+	install_docker=true
+fi
+
 if ${install_docker}; then
         echo "## Install Docker"
 	curl -fsSL https://download.docker.com/linux/ubuntu/gpg |sudo gpg --dearmor --output /usr/share/keyrings/docker-archive-keyring.gpg
@@ -72,7 +201,7 @@ Packages="${Packages} \
     ca-certificates \
     "
 	cat > /etc/apt/sources.list.d/docker.sources << EOF
-X-Repolib-Name: Docker repo Sources
+X-Repolib-Name: Docker repo
 Enabled: yes
 Types: deb
 URIs: http://download.docker.com/linux/ubuntu
@@ -83,7 +212,7 @@ Signed-By: /usr/share/keyrings/docker-archive-keyring.gpg
 EOF
 
 Packages="${Packages} \
-    docker-ce docker-ce-cli docker-compose docker-compose-plugin
+    docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin docker-clean
     "
 fi
 
