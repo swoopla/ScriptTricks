@@ -3,7 +3,6 @@
 LIST_PKG_SPEC="tellico"
 LIST_PKG_SPEC="gscan2pdf git gitk gip filezilla x2goclient sshfs"
 LIST_PKG_SPEC="thunderbird"
-CodeName="$(lsb_release -sc Codename 2>/dev/null)"
 install_brave_browser=true
 install_docker=true
 install_vscode=true
@@ -17,7 +16,52 @@ install_git_repo=false
 
 Packages="${LIST_PKG_SPEC} vim terminator geany vlc gthumb htop"
 
-sudo apt install -yqq curl auto-apt-cacher
+if [[ $(id -u ) -ne 0 ]]; then
+        echo 'Must run in ROOT land with sudo'
+        exit
+fi
+
+sudo apt update && sudo apt full-upgrade -yqq
+sudo apt install -yqq apt-transport-https curl gnupg lsb-release
+source /etc/os-release
+CodeName="$(lsb_release -sc Codename 2>/dev/null)"
+Distribution="$(lsb_release -sc ID 2>/dev/null)"
+
+if [[ "${Distribution}" == 'Ubuntu' ]]; then
+	cat > /etc/apt/sources.list.d/ubuntu.sources << EOF
+X-Repolib-Name: Ubuntu
+Types: deb
+Enabled: yes
+URIs: http://archive.ubuntu.com/ubuntu
+Suites: noble noble-updates noble-security
+Components: main restricted universe multiverse
+Architectures: amd64 i386
+Signed-By: /etc/apt/trusted.gpg.d/ubuntu-keyring-2018-archive.gpg
+EOF
+	apt install -yqq auto-apt-cacher
+
+elif [[ "${Distribution}" == 'Debian' ]]; then
+        cat > /etc/apt/sources.list.d/debian.sources << EOF
+X-Repolib-Name: Debian
+Types: deb
+Enabled: yes
+URIs: http://deb.debian.org/debian
+Suites: ${CodeName} ${CodeName}-updates ${CodeName}-backports
+Components: main contrib non-free-firware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+Types: deb
+Enabled: yes
+URIs: http://deb.debian.org/debian-security
+Suites: ${CodeName}-security
+Components: main contrib non-free-firware
+Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+EOF
+
+else
+	echo 'Not managed'
+	exit
+fi
 
 if ${install_git_repo}; then
 	echo "## Install GIT Repo"
