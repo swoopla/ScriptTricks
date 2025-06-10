@@ -1,4 +1,0 @@
-#!/bin/bash
-
-echo  ">>> Deleting stopped containers"
-docker ps --all --quiet -f 'status=exited' |xargs -r docker rm

@@ -1,4 +1,0 @@
-#!/bin/bash
-
-echo  ">>> Deleting untagged images"
-docker images -q -f dangling=true |xargs -r docker rmi

@@ -1,8 +1,0 @@
-#!/bin/bash
-
-#docker system df
-#docker system prune --all --force
-/usr/local/bin/docker_clean_containers
-/usr/local/bin/docker_clean_images
-/usr/local/bin/docker_clean_networks
-/usr/local/bin/docker_clean_volumes
